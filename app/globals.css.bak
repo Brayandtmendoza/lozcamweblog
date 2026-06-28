@@ -1,0 +1,111 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-action: #1E6FBF;
+  --color-action-hover: #3B82C4;
+  --color-accent: #F5A623;
+  --color-accent-hover: #F7B84D;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:root {
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+
+  --table-header-bg: #f3f4f6;
+  --table-header-text: #374151;
+  --table-row-hover: rgba(30, 111, 191, 0.06);
+  --table-border: #e5e7eb;
+
+  --action: #1E6FBF;
+  --action-hover: #3B82C4;
+  --accent: #F5A623;
+  --accent-hover: #F7B84D;
+}
+
+
+html.dark {
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --card-shadow: none;
+  --text-primary: #ffffff;
+  --text-secondary: #6b7280;
+
+  --table-header-bg: rgba(255,255,255,0.06);
+  --table-header-text: #9ca3af;
+  --table-row-hover: rgba(30, 111, 191, 0.10);
+  --table-border: rgba(255,255,255,0.08);
+
+  --action: #1E6FBF;
+  --action-hover: #3B82C4;
+  --accent: #F5A623;
+  --accent-hover: #F7B84D;
+
+  /* Dropdown sólido para opciones en modo oscuro */
+  --select-option-bg: #1f2937;
+}
+
+/* Select theming — closed state usa variables del tema */
+select {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--card-border);
+  color-scheme: light;
+}
+
+select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+select option:hover {
+  background-color: var(--table-row-hover);
+  color: var(--text-primary);
+}
+
+select option:checked {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* En modo oscuro: color-scheme: dark le dice al navegador que pinte
+   el popup nativo con colores oscuros del SO (la única forma confiable
+   de evitar el fondo blanco del dropdown en Chrome/Edge/Firefox) */
+html.dark select {
+  color-scheme: dark;
+}
+
+html.dark select option {
+  background-color: var(--select-option-bg);
+  color: var(--text-primary);
+}
+
+html.dark select option:hover {
+  background-color: var(--table-row-hover);
+  color: var(--text-primary);
+}
+
+html.dark select option:checked {
+  background-color: var(--select-option-bg) !important;
+  color: var(--text-primary) !important;
+}
