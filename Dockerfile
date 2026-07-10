@@ -1,7 +1,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc* ./
-COPY prisma ./prisma/ 
+# Quitamos la copia forzada de prisma aquí para que no rompa si no encuentra la carpeta vacía
 RUN npm ci
 
 FROM node:22-alpine AS builder
@@ -9,17 +9,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Inyectamos tus variables de Supabase para que el Front-end compile sin errores
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG NEXT_PUBLIC_SITE_URL
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Generamos el cliente de Prisma para conectarse a Cloud SQL
-RUN npx prisma generate
+# Intentará generar Prisma solo si encuentra un archivo de esquema, si no, continuará con la build
+RUN if [ -f "./prisma/schema.prisma" ]; then npx prisma generate; else echo "No se encontró schema.prisma, omitiendo generate"; fi
 
 RUN npm run build
 
@@ -34,7 +27,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Copia la carpeta prisma a la etapa final solo si existe en el proyecto
+RUN if [ -d "./prisma" ]; then cp -r ./prisma ./.next/standalone/prisma || true; fi
 
 USER nextjs
 ENV PORT=8080
