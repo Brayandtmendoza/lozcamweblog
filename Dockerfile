@@ -1,7 +1,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc* ./
-# Quitamos la copia forzada de prisma aquí para que no rompa si no encuentra la carpeta vacía
+# Instalamos las dependencias normales
 RUN npm ci
 
 FROM node:22-alpine AS builder
@@ -10,10 +10,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PRIVATE_STANDALONE=true
 
-# Intentará generar Prisma solo si encuentra un archivo de esquema, si no, continuará con la build
-RUN if [ -f "./prisma/schema.prisma" ]; then npx prisma generate; else echo "No se encontró schema.prisma, omitiendo generate"; fi
+# Ejecuta prisma generate SOLO si el archivo realmente existe en el repositorio
+RUN if [ -f "./prisma/schema.prisma" ]; then npx prisma generate; else echo "Omitiendo npx prisma generate porque schema.prisma no existe"; fi
 
+# Compila Next.js saltándose verificaciones estrictas de base de datos en build time
 RUN npm run build
 
 FROM node:22-alpine AS runner
@@ -28,7 +30,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copia la carpeta prisma a la etapa final solo si existe en el proyecto
+# Copia la carpeta prisma para producción solo si existe
 RUN if [ -d "./prisma" ]; then cp -r ./prisma ./.next/standalone/prisma || true; fi
 
 USER nextjs
